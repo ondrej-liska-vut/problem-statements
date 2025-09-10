@@ -85,8 +85,9 @@ class AddNeighbourhood(SupportsMoves[Solution, AddMove]):
         
         for n in solution.not_colored: #for non colored nodes
             neigbouring_colors = [solution.colors[j] for j in self.problem.g.neighbors(n)]
-            used_colors = set(color for color in neigbouring_colors if color)
-            available_colors = [color for color in range(solution.used_colors + 1) if color not in used_colors]
+            used_colors = set(color for color in neigbouring_colors if color is not None)
+            t = used_colors
+            available_colors = [color for color in range(solution.used_colors + 2) if color not in used_colors]
             for c in available_colors:
                 yield AddMove(self, n, c)
 
@@ -135,9 +136,9 @@ class Problem(
 if __name__ == "__main__":
     import roar_net_api.algorithms as alg
     from parser import IOParser
-
-    G = IOParser.parse2nx("problems/graph-coloring/data/0-SmallExample/0-SmallExample.col")
-    problem = Problem(G, "0-SmallExample")
+    name = "0-SmallExample"
+    G = IOParser.parse2nx(f"problems/graph-coloring/data/{name}/{name}.col")
+    problem = Problem(G, name)
 
     # Run greedy construction to get an initial solution
     solution = alg.greedy_construction(problem)
@@ -150,5 +151,6 @@ if __name__ == "__main__":
     # solution = alg.best_improvement(problem, solution)
     # solution = alg.first_improvement(problem, solution)
 
+    print(solution.colors)
     # Print the final solution to stdout
     # solution.to_textio(sys.stdout)
