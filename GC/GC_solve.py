@@ -86,7 +86,6 @@ class AddNeighbourhood(SupportsMoves[Solution, AddMove]):
         for n in solution.not_colored: #for non colored nodes
             neigbouring_colors = [solution.colors[j] for j in self.problem.g.neighbors(n)]
             used_colors = set(color for color in neigbouring_colors if color is not None)
-            t = used_colors
             available_colors = [color for color in range(solution.used_colors + 2) if color not in used_colors]
             for c in available_colors:
                 yield AddMove(self, n, c)
@@ -99,11 +98,13 @@ class Problem(
     SupportsConstructionNeighbourhood[AddNeighbourhood],
     SupportsEmptySolution[Solution],
 ):
-    def __init__(self, g: networkx.Graph, name: str):
+    def __init__(self, G: networkx.Graph, name: str):
         self.name = name
         self.c_nbhood: Optional[AddNeighbourhood] = None
         # self.l_nbhood: Optional[TwoOptNeighbourhood] = None
-        self.g = g
+        mapping = {old: old - 1 for old in G.nodes()}
+        G_relabelled = networkx.relabel_nodes(G, mapping)
+        self.g = G_relabelled
 
     # def __str__(self) -> str:
     #     out: list[str] = []
@@ -136,7 +137,7 @@ class Problem(
 if __name__ == "__main__":
     import roar_net_api.algorithms as alg
     from parser import IOParser
-    name = "0-SmallExample"
+    name = "1-FullIns_4"
     G = IOParser.parse2nx(f"problems/graph-coloring/data/{name}/{name}.col")
     problem = Problem(G, name)
 
