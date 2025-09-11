@@ -62,6 +62,11 @@ class Solution(SupportsCopySolution, SupportsObjectiveValue):
                 self.color_map[c].append(n)
 
     def nodes_max_available_colors(self) -> list[int]:
+        """Returns a list of maximum available colors for each node.
+
+        Returns:
+            list[int]: A list of maximum available colors for each node.
+        """
         max_available_colors: list[int] = [0] * len(self.problem.g.nodes)
         for node in range(len(self.problem.g.nodes)):
             count = len(list(self.problem.g.neighbors(node))) + 1
@@ -69,6 +74,11 @@ class Solution(SupportsCopySolution, SupportsObjectiveValue):
         return max_available_colors
 
     def _nodes_available_colors(self) -> list[list[int]]:
+        """Returns a list of degree based available colors for each node.
+
+        Returns:
+            list[list[int]]: A list of available colors for each node.
+        """
         max_colors_list = self.nodes_max_available_colors()
         available_colors = []
         for node, max_colors in enumerate(max_colors_list):
