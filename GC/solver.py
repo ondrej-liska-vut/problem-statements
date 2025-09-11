@@ -19,6 +19,16 @@ from roar_net_api.operations import (
 
 @final
 class Solution(SupportsCopySolution, SupportsObjectiveValue):
+    """Represents a solution to the graph coloring problem.
+    The solution consists of a list of colors assigned to each node,
+    a lower bound on the number of colors used, and a reference to the problem instance.
+    The objective value is calculated based on the number of conflicts and used colors.
+
+    Args:
+        SupportsCopySolution (SupportsCopySolution): The base class for copying solutions.
+        SupportsObjectiveValue (SupportsObjectiveValue): The base class for objective value calculations.
+    """
+
     def __init__(
         self,
         problem,
@@ -26,6 +36,15 @@ class Solution(SupportsCopySolution, SupportsObjectiveValue):
         lb: float,
         nodes_available_colors: Optional[list[list[int]]] = None,
     ):
+        """Initializes the solution.
+
+        Args:
+            problem (_type_): _description_
+            colors (list[Optional[int]]): A list of colors assigned to each node.
+            lb (float): A lower bound on the number of colors used.
+            nodes_available_colors (Optional[list[list[int]]], optional): A list of available colors for each node.
+            If none the value for each node is determined by the node's degree. Defaults to None.
+        """
         self.problem = problem
         self.colors = colors
         self.not_colored = [i for i, c in enumerate(colors) if c is None]
@@ -34,7 +53,7 @@ class Solution(SupportsCopySolution, SupportsObjectiveValue):
         self.nodes_available_colors = (
             nodes_available_colors
             if nodes_available_colors is not None
-            else self.nodes_available_colors_method()
+            else self._nodes_available_colors()
         )
         self.color_map = defaultdict(list)
         self._objective_value = None
@@ -49,7 +68,7 @@ class Solution(SupportsCopySolution, SupportsObjectiveValue):
             max_available_colors[node] = count
         return max_available_colors
 
-    def nodes_available_colors_method(self) -> list[list[int]]:
+    def _nodes_available_colors(self) -> list[list[int]]:
         max_colors_list = self.nodes_max_available_colors()
         available_colors = []
         for node, max_colors in enumerate(max_colors_list):

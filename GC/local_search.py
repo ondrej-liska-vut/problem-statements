@@ -109,6 +109,7 @@ class OneRecolorNeighbourhood(
         random.shuffle(randomized_nodes)
         for n in randomized_nodes:
             randomized_colors = list(range(0, solution.used_colors + 1))
+            #randomized_colors = [c for c in solution.nodes_available_colors[n] if c <= solution.used_colors]
             random.shuffle(randomized_colors)
             for c in randomized_colors:
                 yield OneRecolorMove(self, n, c)
