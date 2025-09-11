@@ -19,7 +19,7 @@ from roar_net_api.operations import (
 # --- Solution ---
 @final
 class Solution:
-    def __init__(self, problem, colors: list[Optional[int]], lb: int):
+    def __init__(self, problem, colors: list[Optional[int]], lb: float):
         self.problem = problem
         self.colors = colors
         self.not_colored = [i for i, c in enumerate(colors) if c is None]
@@ -29,7 +29,6 @@ class Solution:
         for n, c in enumerate(colors):
             if c is not None:
                 self.color_map[c].append(n)
-        self.now_feasible = self.is_feasible()
 
     # def used_colors(self) -> int:
     #     return len({c for c in self.colors if c is not None})
@@ -59,12 +58,12 @@ class Solution:
     def is_feasible(self) -> bool:
         return self.is_complete() and self.conflicts() == 0
 
-    def colors_around(self, noode: int) -> set[int]:
-        return {
+    def colors_around(self, noode: int) -> list[int]:
+        return [
             self.colors[neigh]
             for neigh in self.problem.g.neighbors(noode)
             if self.colors[neigh] is not None
-        }
+        ]
 
 
 # ----------------------------------- Moves -----------------------------------
@@ -120,37 +119,6 @@ class AddNeighbourhood(SupportsMoves[Solution, AddMove]):
 
 
 @final
-class TwoOptMove(
-    SupportsApplyMove[Solution], SupportsObjectiveValueIncrement[Solution]
-):
-    def __init__(self, neighbourhood: TwoOptNeighbourhood, ix: int, jx: int):
-        self.neighbourhood = neighbourhood
-        # ix and jx are indices
-        self.ix = ix
-        self.jx = jx
-
-    def apply_move(self, solution: Solution) -> Solution:
-        prob = solution.problem
-        n, ix, jx = prob.n, self.ix, self.jx
-        # Update tour length
-        t = solution.tour
-        solution.lb -= prob.dist[t[ix - 1]][t[ix]] + prob.dist[t[jx - 1]][t[jx % n]]
-        solution.lb += prob.dist[t[ix - 1]][t[jx - 1]] + prob.dist[t[ix]][t[jx % n]]
-        # Update solution
-        solution.tour[ix:jx] = solution.tour[ix:jx][::-1]
-        return solution
-
-    def objective_value_increment(self, solution: Solution) -> float:
-        prob = solution.problem
-        n, ix, jx = prob.n, self.ix, self.jx
-        # Tour length increment
-        t = solution.tour
-        incr = prob.dist[t[ix - 1]][t[jx - 1]] + prob.dist[t[ix]][t[jx % n]]
-        incr -= prob.dist[t[ix - 1]][t[ix]] + prob.dist[t[jx - 1]][t[jx % n]]
-        return incr
-
-
-@final
 class OneRecolorMove(
     SupportsApplyMove[Solution], SupportsObjectiveValueIncrement[Solution]
 ):
@@ -161,25 +129,50 @@ class OneRecolorMove(
         self.c = c
 
     def apply_move(self, solution: Solution) -> Solution:
-        prob = solution.problem
-        n, ix, jx = prob.n, self.ix, self.jx
-        # Update blbosti
+        old_color = solution.colors[self.n]
+        new_color = self.c
 
-        # Update solution
-
+        solution.colors[self.n] = new_color
+        if old_color is None:
+            solution.not_colored.remove(self.n)
+        else:
+            solution.color_map[old_color].remove(self.n)
+            solution.color_map[new_color].append(self.n)
+            if not solution.color_map[old_color]:
+                del solution.color_map[old_color]
+            solution.used_colors = len(solution.color_map)
+        solution.lb += self.objective_value_increment(solution)
         return solution
 
     def objective_value_increment(self, solution: Solution) -> float:
-        loc_neb = solution.colors_around(self.n)
-        # TODO incremental update of conflicts in neighbourhood
-        if solution.now_feasible:
-            if self.c in loc_neb:
-                return self.problem.inf_penalty  # conflict
-            else:
-                return 0 if self.c <= solution.used_colors else 1  # new color
+        colors_around = solution.colors_around(self.n)
+        conf_neb_before_move = colors_around + [solution.colors[self.n]]
+        conf_neb_after_move = colors_around + [self.c]
+
+        for c in set(colors_around):
+            conf_neb_before_move.remove(c)
+            conf_neb_after_move.remove(c)
+
+        conflict_before = (
+            len(conf_neb_before_move) - 1
+        )  # -1 because we count the node itself
+        conflict_after = (
+            len(conf_neb_after_move) - 1
+        )  # -1 because we count the node itself
+
+        if self.c not in solution.color_map:
+            num_colors_increment = 1
+        elif (
+            len(solution.color_map[solution.colors[self.n]]) == 1
+            and solution.colors[self.n] != self.c
+        ):
+            num_colors_increment = -1
         else:
-            return solution.is_feasible
-        # Tour length increment
+            num_colors_increment = 0
+
+        return (
+            conflict_after - conflict_before
+        ) * solution.problem.inf_penalty + num_colors_increment
 
 
 @final
