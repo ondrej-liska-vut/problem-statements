@@ -157,25 +157,25 @@ if __name__ == "__main__":
     # solution = alg.grasp(problem, 30.0)
 
     # Run simulated annealing to improve the previous solution
-    SAsolution = alg.sa(problem, g1solution, 600.0, 1000.0)
-    print("Local search finished")
-    print(SAsolution.colors)
-    print(f"Local search finished with objective value {SAsolution.objective_value()}")
+    # SAsolution = alg.sa(problem, g1solution, 600.0, 1000.0)
+    # print("Local search finished")
+    # print(SAsolution.colors)
+    # print(f"Local search finished with objective value {SAsolution.objective_value()}")
 
-    SA2solution = alg.sa(problem, g3solution, 600.0, 400.0)
-    print("Local search finished")
-    print(SA2solution.colors)
-    print(f"Local search finished with objective value {SA2solution.objective_value()}")
+    # SA2solution = alg.sa(problem, g3solution, 600.0, 400.0)
+    # print("Local search finished")
+    # print(SA2solution.colors)
+    # print(f"Local search finished with objective value {SA2solution.objective_value()}")
 
-    SA3solution = alg.sa(problem, g4solution, 600.0, 50.0)
-    print("Local search finished")
-    print(SA3solution.colors)
-    print(f"Local search finished with objective value {SA3solution.objective_value()}")
+    # SA3solution = alg.sa(problem, g4solution, 600.0, 50.0)
+    # print("Local search finished")
+    # print(SA3solution.colors)
+    # print(f"Local search finished with objective value {SA3solution.objective_value()}")
 
-    RLSsolution = alg.rls(problem, g2solution, 600)
-    print("Local search finished")
-    print(RLSsolution.colors)
-    print(f"Local search finished with objective value {RLSsolution.objective_value()}")
+    # RLSsolution = alg.rls(problem, g2solution, 600)
+    # print("Local search finished")
+    # print(RLSsolution.colors)
+    # print(f"Local search finished with objective value {RLSsolution.objective_value()}")
 
     greedy = alg.greedy_construction(problem)
     print("Greedy constructive  search finished")
@@ -184,34 +184,34 @@ if __name__ == "__main__":
         f"Greedy constructive search finished with objective value {greedy.objective_value()}"
     )
 
-    g1solution = alg.greedy_construction(problem)
-    g2solution = alg.greedy_construction(problem)
-    g3solution = alg.greedy_construction(problem)
-    g4solution = alg.greedy_construction(problem)
+    # g1solution = alg.greedy_construction(problem)
+    # g2solution = alg.greedy_construction(problem)
+    # g3solution = alg.greedy_construction(problem)
+    # g4solution = alg.greedy_construction(problem)
     # solution = alg.beam_search(problem, bw=10)
     # solution = alg.grasp(problem, 30.0)
 
     # Run simulated annealing to improve the previous solution
-    SAsolution = alg.sa(problem, g1solution, 1200.0, 500.0)
-    print("Local search finished")
-    print(SAsolution.colors)
-    print(f"Local search finished with objective value {SAsolution.objective_value()}")
+    # SAsolution = alg.sa(problem, g1solution, 1200.0, 500.0)
+    # print("Local search finished")
+    # print(SAsolution.colors)
+    # print(f"Local search finished with objective value {SAsolution.objective_value()}")
 
-    SA2solution = alg.sa(problem, g3solution, 1200.0, 300.0)
-    print("Local search finished")
-    print(SA2solution.colors)
-    print(f"Local search finished with objective value {SA2solution.objective_value()}")
+    # SA2solution = alg.sa(problem, g3solution, 1200.0, 300.0)
+    # print("Local search finished")
+    # print(SA2solution.colors)
+    # print(f"Local search finished with objective value {SA2solution.objective_value()}")
 
-    SA3solution = alg.sa(problem, g4solution, 1200.0, 50.0)
-    print("Local search finished")
-    print(SA3solution.colors)
-    print(f"Local search finished with objective value {SA3solution.objective_value()}")
+    # SA3solution = alg.sa(problem, g4solution, 1200.0, 50.0)
+    # print("Local search finished")
+    # print(SA3solution.colors)
+    # print(f"Local search finished with objective value {SA3solution.objective_value()}")
 
-    greedy = alg.greedy_construction(problem)
-    print("Greedy constructive  search finished")
-    print(greedy.colors)
-    print(
-        f"Greedy constructive search finished with objective value {greedy.objective_value()}"
-    )
+    # greedy = alg.greedy_construction(problem)
+    # print("Greedy constructive  search finished")
+    # print(greedy.colors)
+    # print(
+    #     f"Greedy constructive search finished with objective value {greedy.objective_value()}"
+    # )
     # Print the final solution to stdout
     # solution.to_textio(sys.stdout)
