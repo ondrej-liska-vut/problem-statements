@@ -1,10 +1,13 @@
 from __future__ import annotations
 from copy import deepcopy
 import networkx
+import argparse
 from typing import Optional, Self, final
 from collections import defaultdict
 from constructive_search import AddNeighbourhood
 from local_search import OneRecolorNeighbourhood
+import roar_net_api.algorithms as alg
+from parser import IOParser
 from roar_net_api.operations import (
     SupportsEmptySolution,
     SupportsConstructionNeighbourhood,
@@ -29,6 +32,9 @@ class Solution(SupportsCopySolution, SupportsObjectiveValue):
                 self.color_map[c].append(n)
 
     def to_textio(self) -> None:
+        print("Solution:")
+        print(" Colors of nodes:",self.colors)
+        print(" Count of used colors:",self.used_colors)
         pass
 
     def conflicts(self) -> int:
@@ -117,81 +123,45 @@ class Problem(
     #         obj += self.dist[c[ix - 1]][c[ix]]
     #     return Solution(self, c, set(), obj)
 
+def arg_parse():
+    ''' Parse command line arguments'''
+    argParser = argparse.ArgumentParser()
+    argParser.add_argument("inputFile", type=str, help="Input file path of graph problem")
+    argParser.add_argument("--sa", action="store_true", help="Run simulated annealing (local search)")
+    argParser.add_argument("--rls", action="store_true", help="Run random local search")
+    argParser.add_argument("--time", type=int, default=10, help="Time limit for local search")
+    argParser.add_argument("--initial_temp", type=float, default=50, help="Initial temperature for simulated annealing")
+    argParser.add_argument("--conflict_penalty", type=float, default=2.0, help="Penalty for each conflict in the objective function")
+    argParser.add_argument("--outputFile", type=str, default=None, help="Output file path to save the solution")
+
+    return argParser.parse_args() 
 
 if __name__ == "__main__":
-    import roar_net_api.algorithms as alg
-    from parser import IOParser
+     # Parse the input file
+    args = arg_parse()
 
-    # name = "1-Insertions_4"
-    # name = "0-SmallExample"
-    name = "1-FullIns_4"
-    G = IOParser.parse2nx(f"problems/graph-coloring/data/{name}/{name}.col")
-    problem = Problem(G, name)
+    #Parsing the input file
+    G = IOParser.parse2nx(args.inputFile)
+
+    # Create the problem instance
+    problem = Problem(G, "Graph coloring", conflict_penalty=args.conflict_penalty)
 
     # Run greedy construction to get an initial solution
-    g1solution = alg.greedy_construction(problem)
-    g2solution = alg.greedy_construction(problem)
-    g3solution = alg.greedy_construction(problem)
-    g4solution = alg.greedy_construction(problem)
-    # solution = alg.beam_search(problem, bw=10)
-    # solution = alg.grasp(problem, 30.0)
+    print("Starting greedy construction")
+    gSolution = alg.greedy_construction(problem)
+    print("Greedy construction finished")
+    gSolution.to_textio()
 
-    # Run simulated annealing to improve the previous solution
-    SAsolution = alg.sa(problem, g1solution, 600.0, 1000.0)
-    print("Local search finished")
-    print(SAsolution.colors)
-    print(f"Local search finished with objective value {SAsolution.objective_value()}")
+    if(args.sa):
+        # Run simulated annealing to improve the previous solution
+        print("Starting simulated annealing")
+        SAsolution = alg.sa(problem, gSolution, args.time, args.initial_temp)
+        print("Simulated annealing finished")
+        SAsolution.to_textio()
 
-    SA2solution = alg.sa(problem, g3solution, 600.0, 400.0)
-    print("Local search finished")
-    print(SA2solution.colors)
-    print(f"Local search finished with objective value {SA2solution.objective_value()}")
-
-    SA3solution = alg.sa(problem, g4solution, 600.0, 50.0)
-    print("Local search finished")
-    print(SA3solution.colors)
-    print(f"Local search finished with objective value {SA3solution.objective_value()}")
-
-    RLSsolution = alg.rls(problem, g2solution, 600)
-    print("Local search finished")
-    print(RLSsolution.colors)
-    print(f"Local search finished with objective value {RLSsolution.objective_value()}")
-
-    greedy = alg.greedy_construction(problem)
-    print("Greedy constructive  search finished")
-    print(greedy.colors)
-    print(
-        f"Greedy constructive search finished with objective value {greedy.objective_value()}"
-    )
-
-    g1solution = alg.greedy_construction(problem)
-    g2solution = alg.greedy_construction(problem)
-    g3solution = alg.greedy_construction(problem)
-    g4solution = alg.greedy_construction(problem)
-    # solution = alg.beam_search(problem, bw=10)
-    # solution = alg.grasp(problem, 30.0)
-
-    # Run simulated annealing to improve the previous solution
-    SAsolution = alg.sa(problem, g1solution, 1200.0, 500.0)
-    print("Local search finished")
-    print(SAsolution.colors)
-    print(f"Local search finished with objective value {SAsolution.objective_value()}")
-
-    SA2solution = alg.sa(problem, g3solution, 1200.0, 300.0)
-    print("Local search finished")
-    print(SA2solution.colors)
-    print(f"Local search finished with objective value {SA2solution.objective_value()}")
-
-    SA3solution = alg.sa(problem, g4solution, 1200.0, 50.0)
-    print("Local search finished")
-    print(SA3solution.colors)
-    print(f"Local search finished with objective value {SA3solution.objective_value()}")
-
-    greedy = alg.greedy_construction(problem)
-    print("Greedy constructive  search finished")
-    print(greedy.colors)
-    print(
-        f"Greedy constructive search finished with objective value {greedy.objective_value()}"
-    )
-    # Print the final solution to stdout
-    # solution.to_textio(sys.stdout)
+    if(args.rls):
+        # Run random local search to improve the previous solution
+        print("Starting random local search")
+        RLSsolution = alg.rls(problem, gSolution, args.time)
+        print("Random local search finished")
+        RLSsolution.to_textio()
