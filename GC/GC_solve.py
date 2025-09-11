@@ -12,19 +12,19 @@ from roar_net_api.operations import (
     SupportsLowerBoundIncrement,
     SupportsLocalNeighbourhood,
     SupportsRandomMovesWithoutReplacement,
-    SupportsObjectiveValueIncrement
+    SupportsObjectiveValueIncrement,
 )
 
 
 # --- Solution ---
 @final
-class Solution():
+class Solution:
     def __init__(self, problem, colors: list[Optional[int]], lb: int):
         self.problem = problem
         self.colors = colors
         self.not_colored = [i for i, c in enumerate(colors) if c is None]
         self.lb = lb
-        self.used_colors = len({c for c in self.colors if c is not None}) 
+        self.used_colors = len({c for c in self.colors if c is not None})
         self.color_map = defaultdict(list)
         for n, c in enumerate(colors):
             if c is not None:
@@ -45,23 +45,28 @@ class Solution():
             if cu is not None and cv is not None and cu == cv:
                 cnt += 1
         return cnt
-    
+
     def objective_value(self) -> Optional[int]:
         if self.is_feasible:
             return self.used_colors
         return self.used_colors + self.problem.inf_penalty
 
     def is_complete(self) -> bool:
-        #return all(c is not None for c in self.colors)
+        # return all(c is not None for c in self.colors)
         return self.not_colored == []
 
     @property
     def is_feasible(self) -> bool:
-        return self.is_complete() and self.conflicts() == 0 
-    
-    def colors_around(self, noode:int) -> set[int]:
-        return {self.colors[neigh] for neigh in self.problem.g.neighbors(noode) if self.colors[neigh] is not None}
-    
+        return self.is_complete() and self.conflicts() == 0
+
+    def colors_around(self, noode: int) -> set[int]:
+        return {
+            self.colors[neigh]
+            for neigh in self.problem.g.neighbors(noode)
+            if self.colors[neigh] is not None
+        }
+
+
 # ----------------------------------- Moves -----------------------------------
 
 
@@ -97,16 +102,27 @@ class AddNeighbourhood(SupportsMoves[Solution, AddMove]):
 
     def moves(self, solution: Solution) -> Iterable[AddMove]:
         assert self.problem == solution.problem
-        
-        for n in solution.not_colored: #for non colored nodes
-            neigbouring_colors = [solution.colors[j] for j in self.problem.g.neighbors(n)]
-            used_colors = set(color for color in neigbouring_colors if color is not None)
-            available_colors = [color for color in range(solution.used_colors + 2) if color not in used_colors]
+
+        for n in solution.not_colored:  # for non colored nodes
+            neigbouring_colors = [
+                solution.colors[j] for j in self.problem.g.neighbors(n)
+            ]
+            used_colors = set(
+                color for color in neigbouring_colors if color is not None
+            )
+            available_colors = [
+                color
+                for color in range(solution.used_colors + 2)
+                if color not in used_colors
+            ]
             for c in available_colors:
                 yield AddMove(self, n, c)
 
+
 @final
-class TwoOptMove(SupportsApplyMove[Solution], SupportsObjectiveValueIncrement[Solution]):
+class TwoOptMove(
+    SupportsApplyMove[Solution], SupportsObjectiveValueIncrement[Solution]
+):
     def __init__(self, neighbourhood: TwoOptNeighbourhood, ix: int, jx: int):
         self.neighbourhood = neighbourhood
         # ix and jx are indices
@@ -132,9 +148,12 @@ class TwoOptMove(SupportsApplyMove[Solution], SupportsObjectiveValueIncrement[So
         incr = prob.dist[t[ix - 1]][t[jx - 1]] + prob.dist[t[ix]][t[jx % n]]
         incr -= prob.dist[t[ix - 1]][t[ix]] + prob.dist[t[jx - 1]][t[jx % n]]
         return incr
-    
+
+
 @final
-class OneRecolorMove(SupportsApplyMove[Solution], SupportsObjectiveValueIncrement[Solution]):
+class OneRecolorMove(
+    SupportsApplyMove[Solution], SupportsObjectiveValueIncrement[Solution]
+):
     def __init__(self, neighbourhood, n: int, c: int):
         self.neighbourhood = neighbourhood
         # ix and jx are indices
@@ -155,15 +174,12 @@ class OneRecolorMove(SupportsApplyMove[Solution], SupportsObjectiveValueIncremen
         # TODO incremental update of conflicts in neighbourhood
         if solution.now_feasible:
             if self.c in loc_neb:
-                return self.problem.inf_penalty # conflict
+                return self.problem.inf_penalty  # conflict
             else:
-                return 0 if self.c <= solution.used_colors else 1 # new color
-        else: 
+                return 0 if self.c <= solution.used_colors else 1  # new color
+        else:
             return solution.is_feasible
         # Tour length increment
-
-    
-
 
 
 @final
@@ -173,7 +189,9 @@ class OneRecolorNeighbourhood(
     def __init__(self, problem):
         self.problem = problem
 
-    def random_moves_without_replacement(self, solution: Solution) -> Iterable[OneRecolorMove]:
+    def random_moves_without_replacement(
+        self, solution: Solution
+    ) -> Iterable[OneRecolorMove]:
         assert self.problem == solution.problem
         N = len(solution.colors)
         # This is only meant to be used as a local neighbourhood, so solution should be feasible
@@ -184,17 +202,16 @@ class OneRecolorNeighbourhood(
                 yield OneRecolorMove(self, n)
 
 
-
-
 # ---------------------------------- Problem --------------------------------
+
 
 @final
 class Problem(
     SupportsConstructionNeighbourhood[AddNeighbourhood],
     SupportsEmptySolution[Solution],
-    SupportsLocalNeighbourhood[OneRecolorNeighbourhood]
+    SupportsLocalNeighbourhood[OneRecolorNeighbourhood],
 ):
-    def __init__(self, G: networkx.Graph, name: str,inf_penalty=1000):
+    def __init__(self, G: networkx.Graph, name: str, inf_penalty=1000):
         self.name = name
         self.c_nbhood: Optional[AddNeighbourhood] = None
         # self.l_nbhood: Optional[TwoOptNeighbourhood] = None
@@ -220,7 +237,7 @@ class Problem(
     #     return self.l_nbhood
 
     def empty_solution(self) -> Solution:
-        return Solution(self, [None] * len(self.g), 0) # TODO better initial lb
+        return Solution(self, [None] * len(self.g), 0)  # TODO better initial lb
 
     # def random_solution(self) -> Solution:
     #     c = list(range(1, self.n))
@@ -231,9 +248,11 @@ class Problem(
     #         obj += self.dist[c[ix - 1]][c[ix]]
     #     return Solution(self, c, set(), obj)
 
+
 if __name__ == "__main__":
     import roar_net_api.algorithms as alg
     from parser import IOParser
+
     name = "1-FullIns_4"
     G = IOParser.parse2nx(f"problems/graph-coloring/data/{name}/{name}.col")
     problem = Problem(G, name)
