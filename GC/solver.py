@@ -24,7 +24,7 @@ class Solution(SupportsCopySolution, SupportsObjectiveValue):
         problem,
         colors: list[Optional[int]],
         lb: float,
-        nodes_available_colors: list[list[int]] = None,
+        nodes_available_colors: Optional[list[list[int]]] = None,
     ):
         self.problem = problem
         self.colors = colors
@@ -43,7 +43,7 @@ class Solution(SupportsCopySolution, SupportsObjectiveValue):
                 self.color_map[c].append(n)
 
     def nodes_max_available_colors(self) -> list[int]:
-        max_available_colors = [[] for _ in range(len(self.problem.g.nodes))]
+        max_available_colors: list[int] = [0] * len(self.problem.g.nodes)
         for node in range(len(self.problem.g.nodes)):
             count = len(list(self.problem.g.neighbors(node))) + 1
             max_available_colors[node] = count
@@ -125,11 +125,8 @@ class Problem(
         self.g = G_relabelled
         self.conflict_penalty = conflict_penalty
 
-    # def __str__(self) -> str:
-    #     out: list[str] = []
-    #     for row in self.dist:
-    #         out.append(" ".join(map(str, row)))
-    #     return "\n".join(out)
+    def __str__(self) -> str:
+        return f"Graph coloring problem {self.name} with {self.g.number_of_nodes()} nodes and {self.g.number_of_edges()} edges."
 
     def construction_neighbourhood(self) -> AddNeighbourhood:
         if self.c_nbhood is None:
@@ -149,7 +146,10 @@ def arg_parse():
     """Parse command line arguments"""
     argParser = argparse.ArgumentParser()
     argParser.add_argument(
-        "inputFile", type=str, help="Input file path of graph problem"
+        "--inputFile",
+        type=str,
+        help="Input file path of graph problem",
+        default="problems/graph-coloring/data/1-FullIns_3/1-FullIns_3.col",
     )
     argParser.add_argument(
         "--sa", action="store_true", help="Run simulated annealing (local search)"
