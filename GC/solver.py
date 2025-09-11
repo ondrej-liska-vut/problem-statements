@@ -91,6 +91,11 @@ class Solution(SupportsCopySolution, SupportsObjectiveValue):
         return available_colors
 
     def to_textio(self) -> str:
+        """Converts the solution to a text representation in format <node_id> <color_id>.
+
+        Returns:
+            str: The text representation of the solution.
+        """
         # print(" Colors of nodes:",self.colors)
         result = ""
         for i, c in enumerate(self.colors):
@@ -98,6 +103,11 @@ class Solution(SupportsCopySolution, SupportsObjectiveValue):
         return result
 
     def conflicts(self) -> int:
+        """Calculates the number of conflicts in the solution.
+
+        Returns:
+            int: The number of conflicts.
+        """
         cols = self.colors
         cnt = 0
         for u, v in self.problem.g.edges:
@@ -107,10 +117,17 @@ class Solution(SupportsCopySolution, SupportsObjectiveValue):
         return cnt
 
     def update_objective_value(self, value: Optional[float]) -> Optional[float]:
+        """Updates the objective value of the solution."""
         self._objective_value = value
         return self._objective_value
 
     def objective_value(self) -> float:
+        """Calculates the objective value of the solution. The value is calculated only
+        if it is not already set to prevent unnecessary recomputation.
+
+        Returns:
+            float: The objective value of the solution.
+        """
         if self._objective_value is not None:
             return self._objective_value
         else:
@@ -120,16 +137,39 @@ class Solution(SupportsCopySolution, SupportsObjectiveValue):
             return self._objective_value
 
     def is_complete(self) -> bool:
+        """Checks if the solution is complete (all nodes are colored).
+
+        Returns:
+            bool: True if the solution is complete, False otherwise.
+        """
         return self.not_colored == []
 
     def copy_solution(self) -> Self:
+        """Creates a deep copy of the solution.
+
+        Returns:
+            Self: A deep copy of the solution.
+        """
         return deepcopy(self)  # TODO more efficient copy
 
     @property
     def is_feasible(self) -> bool:
+        """Checks if the solution is feasible (complete and no conflicts).
+
+        Returns:
+            bool: True if the solution is feasible, False otherwise.
+        """
         return self.is_complete() and self.conflicts() == 0
 
     def colors_around(self, node: int) -> list[int]:
+        """Returns a list of colors used by the neighbors of a given node.
+
+        Args:
+            node (int): The ID of the node.
+
+        Returns:
+            list[int]: A list of colors used by the neighbors of the node.
+        """
         return [
             self.colors[neigh]
             for neigh in self.problem.g.neighbors(node)
@@ -147,6 +187,13 @@ class Problem(
     SupportsLocalNeighbourhood[OneRecolorNeighbourhood],
 ):
     def __init__(self, G: networkx.Graph, name: str, conflict_penalty=2):
+        """Initializes the graph coloring problem instance.
+
+        Args:
+            G (networkx.Graph): The input graph.
+            name (str): The name of the problem.
+            conflict_penalty (int, optional): The penalty for each conflict in the objective function. Defaults to 2.
+        """
         self.name = name
         self.c_nbhood: Optional[AddNeighbourhood] = None
         self.l_nbhood: Optional[OneRecolorNeighbourhood] = None
@@ -156,19 +203,39 @@ class Problem(
         self.conflict_penalty = conflict_penalty
 
     def __str__(self) -> str:
+        """Returns a string representation of the problem instance.
+
+        Returns:
+            str: A string describing the problem instance.
+        """
         return f"Graph coloring problem {self.name} with {self.g.number_of_nodes()} nodes and {self.g.number_of_edges()} edges."
 
     def construction_neighbourhood(self) -> AddNeighbourhood:
+        """Creates the construction neighbourhood for the problem.
+
+        Returns:
+            AddNeighbourhood: The construction neighbourhood.
+        """
         if self.c_nbhood is None:
             self.c_nbhood = AddNeighbourhood(self)
         return self.c_nbhood
 
     def local_neighbourhood(self) -> OneRecolorNeighbourhood:
+        """Creates the local neighbourhood for the problem.
+
+        Returns:
+            OneRecolorNeighbourhood: The local neighbourhood.
+        """
         if self.l_nbhood is None:
             self.l_nbhood = OneRecolorNeighbourhood(self)
         return self.l_nbhood
 
     def empty_solution(self) -> Solution:
+        """Creates an empty solution for the problem where all nodes are uncolored.
+
+        Returns:
+            Solution: An empty solution.
+        """
         return Solution(self, [None] * len(self.g), 0)  # TODO better initial lb
 
 
@@ -236,7 +303,6 @@ if __name__ == "__main__":
         SAresult = SAsolution.to_textio()
         print(SAresult)
 
-
     if args.rls:
         # Run random local search to improve the previous solution
         print("Starting random local search")
@@ -246,7 +312,7 @@ if __name__ == "__main__":
         print(RLSresult)
 
     if args.outputFile:
-        with open(args.outputFile, 'w') as f:
+        with open(args.outputFile, "w") as f:
             if args.sa:
                 f.write(SAresult)
             elif args.rls:
