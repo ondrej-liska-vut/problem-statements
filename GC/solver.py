@@ -19,17 +19,37 @@ from roar_net_api.operations import (
 
 @final
 class Solution(SupportsCopySolution, SupportsObjectiveValue):
-    def __init__(self, problem, colors: list[Optional[int]], lb: float):
+    def __init__(self, problem, colors: list[Optional[int]], lb: float, nodes_available_colors: list[list[int]] = None):
         self.problem = problem
         self.colors = colors
         self.not_colored = [i for i, c in enumerate(colors) if c is None]
         self.lb = lb
         self.used_colors = len({c for c in self.colors if c is not None})
+        self.nodes_available_colors = nodes_available_colors if nodes_available_colors is not None else self.nodes_available_colors_method()
         self.color_map = defaultdict(list)
         self._objective_value = None
         for n, c in enumerate(colors):
             if c is not None:
                 self.color_map[c].append(n)
+
+    def nodes_max_available_colors(self) -> list[int]:
+        max_available_colors = [[] for _ in range(len(self.problem.g.nodes))]
+        for node in range(len(self.problem.g.nodes)):
+            count = len(list(self.problem.g.neighbors(node))) + 1
+            max_available_colors[node] = count
+        return max_available_colors
+    
+    def nodes_available_colors_method(self) -> list[list[int]]:
+        max_colors_list = self.nodes_max_available_colors()
+        available_colors = []
+        for node, max_colors in enumerate(max_colors_list):
+            # Possible colors: 0, 1, ..., max_count-1
+            possible_colors = list(range(max_colors))
+            # Remove colors already used in the neighborhood
+            loc_used_colors = set(self.colors_around(node))
+            node_available = [c for c in possible_colors if c not in loc_used_colors]
+            available_colors.append(node_available)
+        return available_colors
 
     def to_textio(self) -> None:
         print("Solution:")

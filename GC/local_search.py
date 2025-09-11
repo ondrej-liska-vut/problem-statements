@@ -15,12 +15,29 @@ if TYPE_CHECKING:
 class OneRecolorMove(
     SupportsApplyMove["Solution"], SupportsObjectiveValueIncrement["Solution"]
 ):
-    def __init__(self, neighbourhood, n: int, c: int):
+    """A move that recolors a single node for local search only."""
+
+    def __init__(self, neighbourhood: OneRecolorNeighbourhood, n: int, c: int):
+        """A move that recolors a single node for local search only.
+
+        Args:
+            neighbourhood (OneRecolorNeighbourhood): The neighbourhood this move belongs to.
+            n (int): The node to recolor.
+            c (int): The new color for the node.
+        """
         self.neighbourhood = neighbourhood
         self.n = n
         self.c = c
 
     def apply_move(self, solution: "Solution") -> "Solution":
+        """Applies the recolor move to the given solution.
+
+        Args:
+            solution (Solution): The solution to apply the move to.
+
+        Returns:
+            Solution: The modified solution after applying the move.
+        """
         old_color = solution.colors[self.n]
         new_color = self.c
         obj_increment = self.objective_value_increment(solution)
@@ -40,6 +57,14 @@ class OneRecolorMove(
         return solution
 
     def objective_value_increment(self, solution: "Solution") -> float:
+        """Calculates the objective value increment for the move.
+
+        Args:
+            solution (Solution): The solution to evaluate.
+
+        Returns:
+            float: The objective value increment.
+        """
         colors_around = solution.colors_around(self.n)
         conflict_after = colors_around.count(self.c)
         conflict_before = colors_around.count(solution.colors[self.n])
@@ -62,17 +87,24 @@ class OneRecolorMove(
 class OneRecolorNeighbourhood(
     SupportsRandomMovesWithoutReplacement["Solution", OneRecolorMove],
 ):
+    """A neighbourhood for one recolor moves."""
+
     def __init__(self, problem):
         self.problem = problem
 
     def random_moves_without_replacement(
         self, solution: "Solution"
     ) -> Iterable[OneRecolorMove]:
+        """Generates random one recolor moves without replacement.
+
+        Args:
+            solution (Solution): The solution to generate moves for.
+
+        Yields:
+            Iterator[Iterable[OneRecolorMove]]: An iterator over the generated moves.
+        """
         assert self.problem == solution.problem
         N = len(solution.colors)
-        # This is only meant to be used as a local neighbourhood, so solution should be feasible
-        # assert solution.is_feasible
-
         randomized_nodes = list(range(N))
         random.shuffle(randomized_nodes)
         for n in randomized_nodes:

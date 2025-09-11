@@ -12,14 +12,34 @@ if TYPE_CHECKING:
 
 @final
 class AddMove(SupportsApplyMove["Solution"], SupportsLowerBoundIncrement["Solution"]):
-    def __init__(self, neighbourhood, n: int, c: int):
+    """A constructive move that adds a color to a node.
+
+    Args:
+        SupportsApplyMove (SupportsApplyMove): The base class for applying moves.
+        SupportsLowerBoundIncrement (SupportsLowerBoundIncrement): The base class for lower bound increments.
+    """
+
+    def __init__(self, neighbourhood: AddNeighbourhood, n: int, c: int):
+        """Initializes the AddMove.
+
+        Args:
+            neighbourhood (AddNeighbourhood): The neighbourhood this move belongs to.
+            n (int): The node to add a color to.
+            c (int): The color to add.
+        """
         self.neighbourhood = neighbourhood
-        # n is node
         self.n = n
         self.c = c
 
     def apply_move(self, solution: "Solution") -> "Solution":
-        # Update lower bound
+        """Applies the add move to the given solution.
+
+        Args:
+            solution (Solution): The solution to apply the move to.
+
+        Returns:
+            Solution: The modified solution after applying the move.
+        """
         if self.c >= solution.used_colors:
             solution.used_colors += 1
             solution.lb = max(solution.lb, solution.used_colors)
@@ -29,26 +49,50 @@ class AddMove(SupportsApplyMove["Solution"], SupportsLowerBoundIncrement["Soluti
         return solution
 
     def lower_bound_increment(self, solution: "Solution") -> float:
+        """Calculates the lower bound increment for the move.
+
+        Args:
+            solution (Solution): The solution to evaluate.
+
+        Returns:
+            float: The lower bound increment.
+        """
         return max(0, self.c - solution.lb)
-
-
-# ------------------------------- Neighbourhood ------------------------------
 
 
 @final
 class AddNeighbourhood(SupportsMoves["Solution", AddMove]):
+    """A neighbourhood for add moves.
+
+    Args:
+        SupportsMoves (SupportsMoves): The base class for move neighbourhoods.
+    """
+
     def __init__(self, problem):
+        """Initializes the AddNeighbourhood.
+
+        Args:
+            problem (Problem): The problem this neighbourhood belongs to.
+        """
         self.problem = problem
 
     def moves(self, solution: "Solution") -> Iterable[AddMove]:
+        """Generates all possible add moves for the given solution.
+
+        Args:
+            solution (Solution): The solution to generate moves for.
+
+        Returns:
+            Iterable[AddMove]: An iterable of all possible add moves.
+        """
         assert self.problem == solution.problem
 
-        for n in solution.not_colored:  # for non colored nodes
-            neigbouring_colors = [
+        for n in solution.not_colored:  # for non-colored nodes
+            neighbouring_colors = [
                 solution.colors[j] for j in self.problem.g.neighbors(n)
             ]
             used_colors = set(
-                color for color in neigbouring_colors if color is not None
+                color for color in neighbouring_colors if color is not None
             )
             available_colors = [
                 color
