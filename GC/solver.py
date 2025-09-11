@@ -51,11 +51,12 @@ class Solution(SupportsCopySolution, SupportsObjectiveValue):
             available_colors.append(node_available)
         return available_colors
 
-    def to_textio(self) -> None:
-        print("Solution:")
-        print(" Colors of nodes:",self.colors)
-        print(" Count of used colors:",self.used_colors)
-        pass
+    def to_textio(self) -> str:
+        # print(" Colors of nodes:",self.colors)
+        result = ""
+        for i, c in enumerate(self.colors):
+            result += str(i) + " " + str(c) + "\n"
+        return result
 
     def conflicts(self) -> int:
         cols = self.colors
@@ -147,8 +148,9 @@ def arg_parse():
     ''' Parse command line arguments'''
     argParser = argparse.ArgumentParser()
     argParser.add_argument("inputFile", type=str, help="Input file path of graph problem")
-    argParser.add_argument("--sa", action="store_true", help="Run simulated annealing (local search)")
-    argParser.add_argument("--rls", action="store_true", help="Run random local search")
+    group = argParser.add_mutually_exclusive_group()
+    group.add_argument("--sa", action="store_true", help="Run simulated annealing (local search)")
+    group.add_argument("--rls", action="store_true", help="Run random local search")
     argParser.add_argument("--time", type=int, default=10, help="Time limit for local search")
     argParser.add_argument("--initial_temp", type=float, default=50, help="Initial temperature for simulated annealing")
     argParser.add_argument("--conflict_penalty", type=float, default=2.0, help="Penalty for each conflict in the objective function")
@@ -169,19 +171,32 @@ if __name__ == "__main__":
     # Run greedy construction to get an initial solution
     print("Starting greedy construction")
     gSolution = alg.greedy_construction(problem)
-    print("Greedy construction finished")
-    gSolution.to_textio()
+    print("Greedy construction finished, result:")
+    Gresult = gSolution.to_textio()
+    print(Gresult)
 
     if(args.sa):
         # Run simulated annealing to improve the previous solution
         print("Starting simulated annealing")
         SAsolution = alg.sa(problem, gSolution, args.time, args.initial_temp)
-        print("Simulated annealing finished")
-        SAsolution.to_textio()
+        print("Simulated annealing finished, result:")
+        SAresult = SAsolution.to_textio()
+        print(SAresult)
+
 
     if(args.rls):
         # Run random local search to improve the previous solution
         print("Starting random local search")
         RLSsolution = alg.rls(problem, gSolution, args.time)
-        print("Random local search finished")
-        RLSsolution.to_textio()
+        print("Random local search finished, result:")
+        RLSresult = RLSsolution.to_textio()
+        print(RLSresult)
+
+    if args.outputFile:
+        with open(args.outputFile, 'w') as f:
+            if args.sa:
+                f.write(SAresult)
+            elif args.rls:
+                f.write(RLSresult)
+            else:
+                f.write(Gresult)
