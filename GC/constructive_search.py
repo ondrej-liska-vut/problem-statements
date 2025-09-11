@@ -46,7 +46,7 @@ class AddMove(SupportsApplyMove["Solution"], SupportsLowerBoundIncrement["Soluti
         solution.colors[self.n] = self.c
         solution.color_map[self.c].append(self.n)
         solution.not_colored.remove(self.n)
-        #solution.nodes_available_colors = solution.nodes_available_colors_method()
+        # solution.nodes_available_colors = solution.nodes_available_colors_method()
         for neighbor in solution.problem.g.neighbors(self.n):
             if self.c in solution.nodes_available_colors[neighbor]:
                 solution.nodes_available_colors[neighbor].remove(self.c)
@@ -93,7 +93,11 @@ class AddNeighbourhood(SupportsMoves["Solution", AddMove]):
 
         for n in solution.not_colored:  # for non-colored nodes
             max_color = solution.used_colors
-            available_colors = [color for color in solution.nodes_available_colors[n] if color <= max_color]
+            available_colors = [
+                color
+                for color in solution.nodes_available_colors[n]
+                if color <= max_color
+            ]
 
             for c in available_colors:
-                yield AddMove(self, n, c)        
+                yield AddMove(self, n, c)

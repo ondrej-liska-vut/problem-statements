@@ -19,13 +19,23 @@ from roar_net_api.operations import (
 
 @final
 class Solution(SupportsCopySolution, SupportsObjectiveValue):
-    def __init__(self, problem, colors: list[Optional[int]], lb: float, nodes_available_colors: list[list[int]] = None):
+    def __init__(
+        self,
+        problem,
+        colors: list[Optional[int]],
+        lb: float,
+        nodes_available_colors: Optional[list[list[int]]] = None,
+    ):
         self.problem = problem
         self.colors = colors
         self.not_colored = [i for i, c in enumerate(colors) if c is None]
         self.lb = lb
         self.used_colors = len({c for c in self.colors if c is not None})
-        self.nodes_available_colors = nodes_available_colors if nodes_available_colors is not None else self.nodes_available_colors_method()
+        self.nodes_available_colors = (
+            nodes_available_colors
+            if nodes_available_colors is not None
+            else self.nodes_available_colors_method()
+        )
         self.color_map = defaultdict(list)
         self._objective_value = None
         for n, c in enumerate(colors):
@@ -33,12 +43,12 @@ class Solution(SupportsCopySolution, SupportsObjectiveValue):
                 self.color_map[c].append(n)
 
     def nodes_max_available_colors(self) -> list[int]:
-        max_available_colors = [[] for _ in range(len(self.problem.g.nodes))]
+        max_available_colors: list[int] = [0] * len(self.problem.g.nodes)
         for node in range(len(self.problem.g.nodes)):
             count = len(list(self.problem.g.neighbors(node))) + 1
             max_available_colors[node] = count
         return max_available_colors
-    
+
     def nodes_available_colors_method(self) -> list[list[int]]:
         max_colors_list = self.nodes_max_available_colors()
         available_colors = []
@@ -116,11 +126,8 @@ class Problem(
         self.g = G_relabelled
         self.conflict_penalty = conflict_penalty
 
-    # def __str__(self) -> str:
-    #     out: list[str] = []
-    #     for row in self.dist:
-    #         out.append(" ".join(map(str, row)))
-    #     return "\n".join(out)
+    def __str__(self) -> str:
+        return f"Graph coloring problem {self.name} with {self.g.number_of_nodes()} nodes and {self.g.number_of_edges()} edges."
 
     def construction_neighbourhood(self) -> AddNeighbourhood:
         if self.c_nbhood is None:
@@ -135,34 +142,51 @@ class Problem(
     def empty_solution(self) -> Solution:
         return Solution(self, [None] * len(self.g), 0)  # TODO better initial lb
 
-    # def random_solution(self) -> Solution:
-    #     c = list(range(1, self.n))
-    #     random.shuffle(c)
-    #     c.insert(0, 0)
-    #     obj = self.dist[c[-1]][c[0]]
-    #     for ix in range(1, self.n):
-    #         obj += self.dist[c[ix - 1]][c[ix]]
-    #     return Solution(self, c, set(), obj)
 
 def arg_parse():
-    ''' Parse command line arguments'''
+    """Parse command line arguments"""
     argParser = argparse.ArgumentParser()
-    argParser.add_argument("inputFile", type=str, help="Input file path of graph problem")
+    argParser.add_argument(
+        "--inputFile",
+        type=str,
+        help="Input file path of graph problem",
+        default="problems/graph-coloring/data/1-FullIns_3/1-FullIns_3.col",
+    )
     group = argParser.add_mutually_exclusive_group()
-    group.add_argument("--sa", action="store_true", help="Run simulated annealing (local search)")
+    group.add_argument(
+        "--sa", action="store_true", help="Run simulated annealing (local search)"
+    )
     group.add_argument("--rls", action="store_true", help="Run random local search")
-    argParser.add_argument("--time", type=int, default=10, help="Time limit for local search")
-    argParser.add_argument("--initial_temp", type=float, default=50, help="Initial temperature for simulated annealing")
-    argParser.add_argument("--conflict_penalty", type=float, default=2.0, help="Penalty for each conflict in the objective function")
-    argParser.add_argument("--outputFile", type=str, default=None, help="Output file path to save the solution")
+    argParser.add_argument(
+        "--time", type=int, default=10, help="Time limit for local search"
+    )
+    argParser.add_argument(
+        "--initial_temp",
+        type=float,
+        default=50,
+        help="Initial temperature for simulated annealing",
+    )
+    argParser.add_argument(
+        "--conflict_penalty",
+        type=float,
+        default=2.0,
+        help="Penalty for each conflict in the objective function",
+    )
+    argParser.add_argument(
+        "--outputFile",
+        type=str,
+        default=None,
+        help="Output file path to save the solution",
+    )
 
-    return argParser.parse_args() 
+    return argParser.parse_args()
+
 
 if __name__ == "__main__":
-     # Parse the input file
+    # Parse the input file
     args = arg_parse()
 
-    #Parsing the input file
+    # Parsing the input file
     G = IOParser.parse2nx(args.inputFile)
 
     # Create the problem instance
@@ -175,7 +199,7 @@ if __name__ == "__main__":
     Gresult = gSolution.to_textio()
     print(Gresult)
 
-    if(args.sa):
+    if args.sa:
         # Run simulated annealing to improve the previous solution
         print("Starting simulated annealing")
         SAsolution = alg.sa(problem, gSolution, args.time, args.initial_temp)
@@ -184,7 +208,7 @@ if __name__ == "__main__":
         print(SAresult)
 
 
-    if(args.rls):
+    if args.rls:
         # Run random local search to improve the previous solution
         print("Starting random local search")
         RLSsolution = alg.rls(problem, gSolution, args.time)
